@@ -22,7 +22,7 @@ apt-get install -y nano git openssh-server openssh-client debconf-utils man
 
 apt-get install -y software-properties-common
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
-add-apt-repository 'deb http://mirror.stshosting.co.uk/mariadb/repo/10.0/ubuntu trusty main'
+add-apt-repository 'deb [arch=amd64,i386] http://lon1.mirrors.digitalocean.com/mariadb/repo/10.0/ubuntu trusty main'
 
 echo "mariadb-server-10.0	mysql-server/root_password	password	root" | debconf-set-selections
 echo "mariadb-server-10.0	mysql-server/root_password_again	password	root" | debconf-set-selections
@@ -32,6 +32,7 @@ apt-get install -y mariadb-server mariadb-client
 update-rc.d mysql defaults
 cat "$path_to_profile_config_files/my.cnf" > /etc/mysql/my.cnf
 service mysql start
+sleep 5
 
 # Create default Drupal database and user
 mysql -u root -proot -e "CREATE DATABASE drupal CHARACTER SET utf8 COLLATE utf8_general_ci;"
@@ -106,8 +107,8 @@ chown -R tomcat7:tomcat7 /var/lib/solr
 chmod -R u+rw /var/lib/solr
 chmod go-rwx /var/lib/solr
 
-rm -Rf /tmp/solr-4.10.3
-unlink /tmp/solr-4.10.3.tgz
+rm -Rf /tmp/solr-4.10.4
+unlink /tmp/solr-4.10.4.tgz
 cd "$curdir"
 
 # Setup a Solr core for Drupal
@@ -128,13 +129,12 @@ usermod -a -G www-data rainmaker
 
 # Install Drush
 apt-get install -y zip unzip php-console-table
-wget "https://github.com/drush-ops/drush/archive/6.5.0.zip" -O /tmp/drush-6.5.0.zip
-cd /tmp
-unzip /tmp/drush-6.5.0.zip
-mv /tmp/drush-6.5.0 /opt/drush
-chown -R root:root /opt/drush
+mkdir /opt/drush
+cd /opt/drush
+git clone https://github.com/drush-ops/drush.git .
+git checkout 6.5.0
 chmod a+x /opt/drush/drush
-unlink /tmp/drush-6.5.0.zip
+ln -s /opt/drush/drush /usr/local/bin/drush
 cd "$curdir"
 
 # Install Composer
@@ -143,6 +143,7 @@ cd /tmp
 curl -sS https://getcomposer.org/installer | php
 mkdir -p /opt/composer
 mv composer.phar /opt/composer/composer
+ln -s /opt/composer/composer /usr/local/bin/composer
 cd "$curdir"
 
 # Install the Deeson frontend tool chain
